@@ -65,6 +65,19 @@ class NaiveBayesModel private[mllib] (
   override def predict(testData: Vector): Double = {
     labels(brzArgmax(brzPi + brzTheta * testData.toBreeze))
   }
+  
+  def customPredict(testData: RDD[Vector]): RDD[String] = {
+    val bcModel = testData.context.broadcast(this)
+    testData.mapPartitions { iter =>
+      val model = bcModel.value
+      iter.map(model.customPredict)
+    }
+  }
+  
+  def customPredict(testData: Vector) : String={
+    val array=(brzPi + brzTheta * testData.toBreeze).toArray
+    array.mkString(" ")
+  }
 }
 
 /**
